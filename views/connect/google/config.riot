@@ -1,0 +1,61 @@
+<connect-google-config>
+  <div class="card mb-3">
+    <div class="card-header">
+      <b>Google Connector</b>
+    </div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <label class="form-label">
+          Redirect URI
+        </label>
+        <input class="form-control disabled" value={ `https://${window.location.hostname}/connect/google` } disabled />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">
+          App ID
+        </label>
+        <input class="form-control" name="client-id" ref="client-id" value={ props.connect.clientID } onchange={ (e) => onClientID(e) } />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">
+          App Secret
+        </label>
+        <input class="form-control" name="client-secret" ref="client-secret" value={ props.connect.clientSecret } onchange={ (e) => onClientSecret(e) } />
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /**
+     * export default
+     */
+    export default class ConnectGoogleConfig {
+
+      /**
+       * on client id
+       */
+      onClientID(e) {
+        // get value
+        const val = e.target.value;
+        
+        // set channel
+        this.props.set('clientID', val);
+      }
+
+      /**
+       * on clientSecret
+       */
+      onClientSecret(e) {
+        // get value
+        const val = e.target.value;
+        
+        // set channel
+        this.props.set('clientSecret', val);
+      }
+    }
+  </script>
+</connect-google-config>
