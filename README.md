@@ -1,9 +1,9 @@
-Dashup Module Facebook
+Dashup Module Google
 &middot;
-[![Latest Github release](https://img.shields.io/github/release/dashup/module-facebook.svg)](https://github.com/dashup/module-facebook/releases/latest)
+[![Latest Github release](https://img.shields.io/github/release/dashup/module-google.svg)](https://github.com/dashup/module-google/releases/latest)
 =====
 
-A connect interface for facebook on [dashup](https://dashup.io).
+A connect interface for google on [dashup](https://dashup.io).
 
 ## Contents
 * [Get Started](#get-started)
@@ -11,7 +11,7 @@ A connect interface for facebook on [dashup](https://dashup.io).
 
 ## Get Started
 
-This facebook connector adds facebook login to Dashup frontend modules:
+This google connector adds google login to Dashup frontend modules:
 
 ```json
 {
@@ -26,5 +26,5 @@ To start the connection to dashup:
 
 ## Deployment
 
-1. `docker build -t dashup/module-facebook .`
-2. `docker run -d -v /path/to/.dashup.json:/usr/src/module/.dashup.json dashup/module-facebook`
+1. `docker build -t dashup/module-google .`
+2. `docker run -d -v /path/to/.dashup.json:/usr/src/module/.dashup.json dashup/module-google`
