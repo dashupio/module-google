@@ -8,30 +8,12 @@ const GoogleConnect = require('./connects/google');
  * export module
  */
 class GoogleModule extends Module {
-
   /**
-   * construct discord module
+   * Register all interfaces here
    */
-  constructor() {
-    // run super
-    super();
-  }
-  
-  /**
-   * Register all connect interfaces here
-   * 
-   * ```
-   * // register connect class
-   * register(Connect);
-   * ```
-   * 
-   * Class `Connect` should extend `require('@dashup/module').Connect`
-   * 
-   * @param {Function} register 
-   */
-  connects(register) {
+  register(register) {
     // register discord connect
-    register(GoogleConnect);
+    register('connect', GoogleConnect);
   }
 }
 
