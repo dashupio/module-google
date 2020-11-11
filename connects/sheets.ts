@@ -109,12 +109,15 @@ export default class SheetsConnect extends Struct {
   async saveAction({ req, dashup }, connect) {
     // check dashup
     if (!dashup || !req || !req.query || !req.query.code) return { connect };
+
+    // fix domain
+    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
     
     // create client
     const client = new google.auth.OAuth2(
       this.dashup.config.client,
       this.dashup.config.secret,
-      `${this.dashup.config.url}/connect/sheets`,
+      `${domain}/connect/sheets`,
     );
 
     // complete auth
@@ -140,11 +143,14 @@ export default class SheetsConnect extends Struct {
    * @param connect 
    */
   async listAction(opts, connect) {
+    // fix domain
+    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+
     // create client
     const client = new google.auth.OAuth2(
       this.dashup.config.client,
       this.dashup.config.secret,
-      `${this.dashup.config.url}/connect/sheets`,
+      `${domain}/connect/sheets`,
     );
 
     // set credentials
@@ -206,11 +212,14 @@ export default class SheetsConnect extends Struct {
    * @param connect 
    */
   async fieldsAction(opts, connect) {
+    // fix domain
+    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+
     // create client
     const client = new google.auth.OAuth2(
       this.dashup.config.client,
       this.dashup.config.secret,
-      `${this.dashup.config.url}/connect/sheets`,
+      `${domain}/connect/sheets`,
     );
 
     // set credentials
@@ -264,11 +273,14 @@ export default class SheetsConnect extends Struct {
    * @param connect 
    */
   async syncAction(opts, connect, { page, model, form }) {
+    // fix domain
+    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+
     // create client
     const client = new google.auth.OAuth2(
       this.dashup.config.client,
       this.dashup.config.secret,
-      `${this.dashup.config.url}/connect/sheets`,
+      `${domain}/connect/sheets`,
     );
 
     // set credentials
