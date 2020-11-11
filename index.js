@@ -2,6 +2,7 @@
 const { Module } = require('@dashup/module');
 
 // import base
+const SheetsConnect = require('./connects/sheets');
 const GoogleConnect = require('./connects/google');
 
 /**
@@ -13,6 +14,7 @@ class GoogleModule extends Module {
    */
   register(register) {
     // register discord connect
+    register('connect', SheetsConnect);
     register('connect', GoogleConnect);
   }
 }

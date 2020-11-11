@@ -1,0 +1,359 @@
+<connect-sheets-config>
+  <div class="card mb-3">
+    <div class="card-header">
+      <b>Google Sheets Connector</b>
+    </div>
+    <div if={ !props.connect.sheets } class="card-body">
+      <button onclick={ (e) => onConnect(e) } class="btn btn-light bg-white">
+        <i class="fab fa-google mr-2" />
+        Connect with Sheets
+      </button>
+    </div>
+    <div if={ props.connect.sheets } class="card-body">
+      
+      <div if={ !props.connect.file }>
+        <div if={ state.loading } class="text-center">
+          <i class="h1 fa fa-spinner fa-spin my-5" />
+        </div>
+        <div if={ !state.loading && state.spreadsheets }>
+          <div class="mb-3">
+            <div class="input-group">
+              <input class="form-control" onkeyup={ (e) => onSearch(e) } placeholder="Search..." />
+              <span class="input-group-text">
+                <i class="fa fa-search" />
+              </span>
+            </div>
+          </div>
+          <button each={ (sheet, i) in state.spreadsheets } onclick={ (e) => onSelect(e, sheet) } class={ `card w-100 card-sm bg-white mb-2${isVisible(sheet) ? '' : ' d-none'}` }>
+            <div class="card-body d-flex flex-row">
+              <div class="text-overflow text-left">
+                <b>{ sheet.name }</b>
+                <small class="d-block">
+                  Created { moment(sheet.created_at).fromNow() },
+                  Size { bytes(sheet.size) }
+                </small>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div if={ props.connect.file }>
+        <div class="card card-sm bg-white mb-3">
+          <div class="card-body d-flex flex-row">
+            <div class="text-overflow">
+              <b>{ props.connect.file.name }</b>
+              <small class="d-block">
+                Created { moment(props.connect.file.created_at).fromNow() },
+                Size { bytes(props.connect.file.size) }
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">
+            Select Direction
+          </label>
+          <eden-select on-change={ (e, v) => onDirection(v) } placeholder="Select Direction" data={ getDirections() } />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">
+            Select Identifier Field
+          </label>
+          <eden-select on-change={ (e, v) => onIdentifier(v) } placeholder="Select Identifier" data={ getIdentifier() } />
+        </div>
+
+        <div if={ state.loading } class="text-center">
+          <i class="h1 fa fa-spinner fa-spin my-5" />
+        </div>
+        <div if={ !state.loading && state.fields }>
+          <div each={ (field, i) in state.fields } class="card bg-white mb-2">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-6 d-flex align-items-center">
+                  <div>
+                    <b>{ field.key }</b>
+                    <small class="d-block">{ field.value }</small>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <eden-select on-change={ (e, val) => onField(field.key, val) } placeholder="Select Field" data={ getField(field) } />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-right">
+        <button class={ `btn btn-success${state.syncing ? ' disabled' : ''}` } onclick={ (e) => onSync(e) }>
+          { state.syncing ? 'Syncing Data...' : 'Sync Data' }
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // import base
+    import bytes from 'bytes';
+    import moment from 'moment';
+    import { windowPopup } from 'window-popup';
+
+    /**
+     * export default
+     */
+    export default class ConnectSheetsConfig {
+
+      /**
+       * on before mount
+       */
+      onBeforeMount() {
+        // on before mount
+        this.load = this.load.bind(this);
+
+        // mixins
+        this.bytes = bytes;
+        this.moment = moment;
+      }
+
+      /**
+       * on mounted
+       */
+      onMounted() {
+        // load
+        this.load();
+      }
+
+      /**
+       * on updated
+       */
+      onUpdated() {
+        // load
+        this.load();
+      }
+
+      /**
+       * on search
+       */
+      onSearch(e) {
+        // update search
+        this.update({
+          search : e.target.value,
+        });
+      }
+
+      /**
+       * pull
+       */
+      async onSync(e) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // pull
+        this.update({
+          syncing : true,
+        });
+
+        // sync
+        await this.props.dashup.action({
+          type   : 'connect',
+          struct : 'sheets',
+        }, 'sync', this.props.connect, {
+          page  : this.props.page.get('_id'),
+          form  : this.props.page.get('data.forms.0'),
+          model : this.props.page.get('data.model') || this.props.page.get('_id'),
+        });
+
+        // pull
+        this.update({
+          syncing : false,
+        });
+        this.props.page.emit('do.page', new Date());
+      }
+
+      /**
+       * on select
+       */
+      onSelect(e, sheet) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // set sheet
+        this.props.set('file', sheet);
+      }
+
+      /**
+       * on field
+       */
+      onField(key, uuid) {
+        // fields
+        const fields = this.props.connect.fields || {};
+
+        // set value
+        fields[uuid] = key;
+
+        // set sheet
+        this.props.set('fields', fields);
+      }
+
+      /**
+       * on connect
+       */
+      onConnect(e) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // window popup
+        const w = windowPopup(500, 700, this.getInviteURL(), 'Connect Discord');
+      }
+
+      /**
+       * on connect
+       */
+      onIdentifier(val) {
+        // set channel
+        this.props.set('direction', val);
+      }
+
+      /**
+       * on connect
+       */
+      onDirection(val) {
+        // get value
+        if (!val) val = this.refs.direction.val();
+        
+        // set channel
+        this.props.set('direction', val);
+      }
+
+      /**
+       * get bot url
+       */
+      getInviteURL() {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // client
+        const client = this.props.getConnect(this.props.connect).data.client;
+      
+        // redirect to google
+        const redirect = `https://accounts.google.com/o/oauth2/auth?scope=${
+          encodeURIComponent(`https://www.googleapis.com/auth/drive`)
+        }&access_type=offline&response_type=code&approval_prompt=force&redirect_uri=${
+          encodeURIComponent(`https://${window.location.hostname}/connect/sheets`)
+        }&client_id=${client}&state=${this.props.page.get('_id')}:${this.props.connect.uuid}:${this.props.session}`;
+
+        // window location
+        return redirect;
+      }
+
+      /**
+       * get channels
+       */
+      getDirections() {
+        // return value
+        return [['Both Ways', 'both'], ['Sheets => Dashup only', 'sheets'], ['Dashup => Sheets only', 'dashup']].map((sync) => {
+          // return channel
+          return {
+            text     : sync[0],
+            value    : sync[1],
+            selected : this.props.connect.direction === sync[1],
+          };
+        });
+      }
+
+      /**
+       * get identifier
+       */
+      getIdentifier() {
+        // keys
+        return Object.keys(this.props.connect.fields || {}).map((uuid) => {
+          // get field
+          const field = this.props.context.fields.find((f) => f.uuid === uuid);
+
+          // return
+          return field ? {
+            name     : `${field.label || field.name} === ${this.props.connect.fields[uuid]}`,
+            value    : field.uuid,
+            selected : this.props.connect.identifier === field.uuid,
+          } : null;
+        }).filter((f) => f);
+      }
+
+      /**
+       * get field
+       */
+      getField(f) {
+        // return value
+        return [...(this.props.context.fields)].map((field) => {
+          // return fields
+          return {
+            name     : field.label || field.name,
+            value    : field.uuid,
+            selected : (this.props.connect.fields || {})[field.uuid] === f.key,
+          };
+        });
+      }
+
+      /**
+       * is visible
+       */
+      isVisible(item) {
+        // return search
+        return `${item.name}`.toLowerCase().includes(`${this.state.search || ''}`.toLowerCase());
+      }
+
+      /**
+       * load files
+       */
+      async load() {
+        // check loading
+        if (this.loading) return;
+        if (this.spreadsheets) return;
+        if (!this.props.connect.sheets) return;
+
+        // loading
+        this.loading = true;
+
+        // loading
+        this.update({
+          loading : true,
+        });
+
+        // check load type
+        if (!this.props.connect.file) {
+          // update
+          this.update({
+            loading      : false,
+            spreadsheets : (await this.props.dashup.action({
+              type   : 'connect',
+              struct : 'sheets',
+            }, 'list', this.props.connect, {})).sort((a, b) => {
+              // dates
+              const aD = new Date(a.created_at);
+              const bD = new Date(b.created_at);
+
+              // sort
+              if (aD > bD) return 1;
+              if (aD < bD) return -1;
+              return 0;
+            }),
+          });
+        } else {
+          // update
+          this.update({
+            loading : false,
+            fields  : (await this.props.dashup.action({
+              type   : 'connect',
+              struct : 'sheets',
+            }, 'fields', this.props.connect, {})),
+          });
+        }
+      }
+    }
+  </script>
+</connect-sheets-config>
