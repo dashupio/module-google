@@ -317,6 +317,14 @@ export default class SheetsConnect extends Struct {
         .pipe(stream);
     });
 
+    // get repo
+    const formPage = await new Query({
+      ...opts,
+    }, 'page').findById(form);
+
+    // identifier field
+    const identifierField = (formPage.get('data.fields') || []).find((c) => c.uuid === connect.identifier);
+
     // loop data
     await Promise.all(data.map(async (item) => {
       // query model
@@ -327,7 +335,7 @@ export default class SheetsConnect extends Struct {
         form,
         model,
       }, 'model').where({
-        [connect.identifier] : item[connect.fields[connect.identifier]],
+        [identifierField.name || identifierField.uuid] : item[connect.fields[connect.identifier]],
       }).findOne();
 
       // actual item
