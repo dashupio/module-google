@@ -1,0 +1,122 @@
+<connect-gmail-config>
+  <div class="card mb-3">
+    <div class="card-header">
+      <b>Gmail Connector</b>
+    </div>
+    <div if={ !props.connect.gmail } class="card-body">
+      <button onclick={ (e) => onConnect(e) } class="btn btn-light bg-white">
+        <i class="fab fa-google mr-2" />
+        Connect with Gmail
+      </button>
+    </div>
+    <div if={ state.loading } class="card-body text-center">
+      <i class="mx-auto fa fa-spinner fa-spin my-5" />
+    </div>
+    <div if={ !state.loading && state.profile } class="card-body">
+      Syncing with <b>{ state.profile.emailAddress }</b>
+    </div>
+  </div>
+
+  <script>
+    // import base
+    import bytes from 'bytes';
+    import moment from 'moment';
+    import { windowPopup } from 'window-popup';
+
+    /**
+     * export default
+     */
+    export default class ConnectSheetsConfig {
+
+      /**
+       * on before mount
+       */
+      onBeforeMount() {
+        // on before mount
+        this.load = this.load.bind(this);
+
+        // mixins
+        this.moment = moment;
+        this.safeUpdate = () => {
+          this.update();
+        };
+      }
+
+      /**
+       * on mounted
+       */
+      onMounted() {
+        // load
+        this.load();
+      }
+
+      /**
+       * on updated
+       */
+      onUpdated() {
+        // load
+        this.load();
+      }
+
+      /**
+       * on connect
+       */
+      onConnect(e) {
+        // prevent
+        e.preventDefault();
+        e.stopPropagation();
+
+        // window popup
+        const w = windowPopup(500, 700, this.getInviteURL(), 'Connect Discord');
+      }
+
+      /**
+       * get bot url
+       */
+      getInviteURL() {
+        // check frontend
+        if (typeof window === 'undefined') return;
+
+        // client
+        const client = this.props.getConnect(this.props.connect).data.client;
+      
+        // redirect to google
+        const redirect = `https://accounts.google.com/o/oauth2/auth?scope=${
+          encodeURIComponent(`https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly`)
+        }&access_type=offline&response_type=code&approval_prompt=force&redirect_uri=${
+          encodeURIComponent(`https://${window.location.hostname}/connect/gmail`)
+        }&client_id=${client}&state=${this.props.page.get('_id')}:${this.props.connect.uuid}:${this.props.session}`;
+
+        // window location
+        return redirect;
+      }
+
+      /**
+       * load files
+       */
+      async load() {
+        // check loading
+        if (this.loading) return;
+        if (this.spreadgmail) return;
+        if (!this.props.connect.gmail) return;
+
+        // loading
+        this.loading = true;
+
+        // loading
+        this.update({
+          loading : true,
+        });
+
+        // update
+        this.update({
+          loading : false,
+          profile : (await this.props.dashup.action({
+            type   : 'connect',
+            struct : 'gmail',
+          }, 'profile', this.props.connect, {})),
+        });
+      }
+    }
+  </script>
+</connect-gmail-config>

@@ -23,7 +23,7 @@
         const redirect = `https://accounts.google.com/o/oauth2/auth?scope=${
           encodeURIComponent(`https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile`)
         }&response_type=code&approval_prompt=force&redirect_uri=${
-          encodeURIComponent(`https://${window.location.hostname}/connect/google`)
+          encodeURIComponent(`https://${window.location.hostname}/connect/sheets`)
         }&client_id=${actualConnector.get('clientID')}&state=${this.props.page}:${this.props.connect.uuid}:${this.props.session}`;
 
         // window location

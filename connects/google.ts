@@ -20,7 +20,6 @@ export default class GoogleConnect extends Struct {
     // bind methods
     this.saveAction = this.saveAction.bind(this);
     this.confirmAction = this.confirmAction.bind(this);
-    this.sanitiseAction = this.sanitiseAction.bind(this);
   }
 
   /**
@@ -52,7 +51,9 @@ export default class GoogleConnect extends Struct {
    */
   get data() {
     // return connect data
-    return {};
+    return {
+      protected : ['secret'],
+    };
   }
 
   /**
@@ -72,9 +73,8 @@ export default class GoogleConnect extends Struct {
   get actions() {
     // return connect actions
     return {
-      save     : this.saveAction,
-      confirm  : this.confirmAction,
-      sanitise : this.sanitiseAction,
+      save    : this.saveAction,
+      confirm : this.confirmAction,
     };
   }
 
@@ -110,24 +110,6 @@ export default class GoogleConnect extends Struct {
       // secret
       connect.secret = oldConnect.secret;
     }
-
-    // return connect
-    return { connect };
-  }
-
-  /**
-   * action method
-   *
-   * @param param0 
-   * @param connect 
-   * @param data 
-   */
-  async sanitiseAction({ req, dashup }, connect = {}) {
-    // check dashup
-    if (!dashup) return;
-
-    // delete
-    if (connect.secret) connect.secret = 'SECRET';
 
     // return connect
     return { connect };
