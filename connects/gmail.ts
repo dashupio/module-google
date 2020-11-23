@@ -1,7 +1,7 @@
 
 // import connect interface;
-import { google } from 'googleapis';
 import MailComposer from 'nodemailer/lib/mail-composer';
+import { google } from 'googleapis';
 import { Struct, Query, Model } from '@dashup/module';
 
 /**
@@ -16,7 +16,7 @@ export default class GmailConnect extends Struct {
   constructor(...args) {
     // run super
     super(...args);
-    
+
     // save action
     this.saveAction = this.saveAction.bind(this);
     this.pollEmails = this.pollEmails.bind(this);
@@ -133,10 +133,10 @@ export default class GmailConnect extends Struct {
             this.dashup.config.secret,
             `${domain}/connect/gmail`,
           );
-      
+
           // set credentials
           client.setCredentials(connect.gmail.tokens);
-      
+
           // gmail
           const gmail = google.gmail({
             auth    : client,
@@ -191,6 +191,8 @@ export default class GmailConnect extends Struct {
               });
             });
 
+            if (!actualMessage.payload.parts || !actualMessage.payload.parts.find((p) => p.mimeType === 'text/plain')) return;
+
             // log
             let from = actualMessage.payload.headers.find((h) => h.name === 'From').value;
             const body = Buffer.from(actualMessage.payload.parts.find((p) => p.mimeType === 'text/plain').body.data, 'base64').toString('utf-8');
@@ -198,7 +200,7 @@ export default class GmailConnect extends Struct {
 
             // check from
             if (from.includes('<')) from = from.split('<')[1].split('>')[0];
-            
+
             // check for member
             const contactForms = await new Query({
               struct : 'gmail',
@@ -210,7 +212,7 @@ export default class GmailConnect extends Struct {
             const contactFields = contactForms.reduce((accum, form) => {
               // push fields
               accum.push(...(form.get('data.fields') || []));
-              
+
               // return accum
               return accum;
             }, []);
@@ -243,7 +245,7 @@ export default class GmailConnect extends Struct {
               // set field
               fields[field] = (form.get('data.fields') || []).find((f) => f.uuid === page.get(`data.event.${field}`));
             });
-            
+
             // create email event
             const event = new Model({
               _meta : {
@@ -287,7 +289,7 @@ export default class GmailConnect extends Struct {
 
     // fix domain
     const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
-    
+
     // create client
     const client = new google.auth.OAuth2(
       this.dashup.config.client,
@@ -306,7 +308,7 @@ export default class GmailConnect extends Struct {
       auth    : client,
       version : 'v1',
     });
-    
+
     // list labels
     const profile = await new Promise((resolve, reject) => {
       // labels
@@ -315,7 +317,7 @@ export default class GmailConnect extends Struct {
       }, (err, res) => {
         // reject
         if (err) return reject(err);
-  
+
         // resolve
         resolve(res.data);
       });
@@ -359,7 +361,7 @@ export default class GmailConnect extends Struct {
       auth    : client,
       version : 'v1',
     });
-    
+
     // list labels
     const profile = await new Promise((resolve, reject) => {
       // labels
@@ -368,12 +370,12 @@ export default class GmailConnect extends Struct {
       }, (err, res) => {
         // reject
         if (err) return reject(err);
-  
+
         // resolve
         resolve(res.data);
       });
     });
-    
+
     // return profile
     return profile;
   }
@@ -408,9 +410,9 @@ export default class GmailConnect extends Struct {
     const email = new MailComposer({
       to,
       subject,
+
       from : connect.email,
       html : body,
-
       textEncoding : 'base64',
     });
     const encoded = await new Promise((resolve, reject) => {
@@ -456,8 +458,6 @@ export default class GmailConnect extends Struct {
       fields[field] = (form.get('data.fields') || []).find((f) => f.uuid === page.get(`data.event.${field}`));
     });
 
-    console.log(done);
-    
     // create email event
     const event = new Model({
       _meta : {
