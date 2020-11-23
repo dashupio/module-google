@@ -24,7 +24,7 @@ export default class GmailConnect extends Struct {
     this.profileAction = this.profileAction.bind(this);
 
     // create listener
-    setInterval(this.pollEmails, 10 * 1000);
+    setInterval(this.pollEmails, 30 * 1000);
   }
 
   /**
