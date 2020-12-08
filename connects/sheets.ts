@@ -1,6 +1,7 @@
 
 // import connect interface;
 import fetch from 'node-fetch';
+import chunk from 'chunk';
 import * as csv from '@fast-csv/parse';
 import { google } from 'googleapis';
 import { Struct, Query, Model } from '@dashup/module';
@@ -325,36 +326,57 @@ export default class SheetsConnect extends Struct {
     // identifier field
     const identifierField = (formPage.get('data.fields') || []).find((c) => c.uuid === connect.identifier);
 
-    // loop data
-    await Promise.all(data.map(async (item) => {
-      // query model
-      let actualItem = await new Query({
+    // split into a few
+    const chunks = chunk(data, 100);
+
+    // log
+    console.log(`syncing ${chunks.length} chunks`);
+
+    // loop chunks
+    for (let i = 0; i < chunks.length; i++) {
+      // chunk
+      const chunk = chunks[i];
+
+      // do bulk update
+      await this.dashup.connection.rpc({
         ...opts,
 
         page,
         form,
         model,
-      }, 'model').where({
-        [identifierField.name || identifierField.uuid] : item[connect.fields[connect.identifier]],
-      }).findOne();
+      }, 'model.bulk', {
+        type       : 'updateOrCreate',
+        query      : [],
+        identifier : identifierField.name || identifierField.uuid,
+      }, chunk.map((item) => {
+        // update item
+        const update = {};
 
-      // actual item
-      if (!actualItem) actualItem = new Model({});
+        // set fields
+        Object.keys(connect.fields).forEach((uuid) => {
+          // set value
+          update[uuid] = item[connect.fields[uuid]];
+        });
 
-      // set fields
-      Object.keys(connect.fields).forEach((uuid) => {
-        // set value
-        actualItem.set(uuid, item[connect.fields[uuid]]);
-      });
+        // return update
+        return update;
+      }));
 
-      // save model
-      return actualItem.save({
+      // emit to socket
+      this.dashup.connection.rpc({
         ...opts,
-
-        page,
-        form,
-        model,
+      }, 'socket.emit', `connect.${connect.uuid}`, {
+        page  : (i + 1),
+        done  : chunk.length + (i * 100),
+        total : data.length,
+        pages : chunks.length,
       });
-    }));
+
+      // log
+      console.log(`synced ${(i + 1)}/${chunks.length} chunks`);
+    }
+
+    // return true
+    return true;
   }
 }

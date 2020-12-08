@@ -87,7 +87,7 @@
 
       <div class="text-right">
         <button class={ `btn btn-success${state.syncing ? ' disabled' : ''}` } onclick={ (e) => onSync(e) }>
-          { state.syncing ? 'Syncing Data...' : 'Sync Data' }
+          { state.syncing ? (state.sync ? `Synced ${state.sync.done} of ${state.sync.total}` : 'Syncing Data...') : 'Sync Data' }
         </button>
       </div>
 
@@ -111,10 +111,19 @@
       onBeforeMount() {
         // on before mount
         this.load = this.load.bind(this);
+        this.onSyncing = this.onSyncing.bind(this);
 
         // mixins
         this.bytes = bytes;
         this.moment = moment;
+      }
+
+      /**
+       * on before unmount
+       */
+      onBeforeUnmount() {
+        // sync
+        this.props.dashup.socket.off(`connect.${this.props.connect.uuid}`, this.onSyncing);
       }
 
       /**
@@ -123,6 +132,9 @@
       onMounted() {
         // load
         this.load();
+
+        // sync
+        this.props.dashup.socket.on(`connect.${this.props.connect.uuid}`, this.onSyncing);
       }
 
       /**
@@ -140,6 +152,16 @@
         // update search
         this.update({
           search : e.target.value,
+        });
+      }
+
+      /**
+       * on sync
+       */
+      onSyncing(sync) {
+        // update sync
+        this.update({
+          sync,
         });
       }
 
@@ -168,6 +190,7 @@
 
         // pull
         this.update({
+          sync    : false,
           syncing : false,
         });
         this.props.page.emit('do.page', new Date());
@@ -328,6 +351,7 @@
         if (!this.props.connect.file) {
           // update
           this.update({
+            sync         : false,
             loading      : false,
             spreadsheets : (await this.props.dashup.action({
               type   : 'connect',
@@ -346,6 +370,7 @@
         } else {
           // update
           this.update({
+            sync    : false,
             loading : false,
             fields  : (await this.props.dashup.action({
               type   : 'connect',
