@@ -13,10 +13,10 @@
   <!-- LIST -->
   <div if={ props.connect.sheets && !props.connect.file } class="card mb-3">
     <div class="card-body">
-      
       <div if={ state.loading } class="text-center">
         <i class="h1 fa fa-spinner fa-spin my-5" />
       </div>
+
       <div if={ !state.loading && state.spreadsheets }>
         <div class="mb-3">
           <div class="input-group">
@@ -71,10 +71,11 @@
         </label>
         <eden-select on-change={ (e, v) => onIdentifier(v) } placeholder="Select Identifier" data={ getIdentifier() } />
       </div>
-
+      
       <div if={ state.loading } class="text-center">
         <i class="h1 fa fa-spinner fa-spin my-5" />
       </div>
+
       <div if={ !state.loading && state.fields }>
         <div each={ (field, i) in state.fields } class="card bg-white mb-2">
           <div class="card-body">
@@ -214,6 +215,7 @@
         e.stopPropagation();
 
         // set sheet
+        this.props.connect.file = sheet;
         this.props.set('file', sheet);
       }
 
@@ -228,6 +230,7 @@
         fields[uuid] = key;
 
         // set sheet
+        this.props.connect.fields = fields;
         this.props.set('fields', fields);
       }
 
@@ -248,6 +251,7 @@
        */
       onIdentifier(val) {
         // set channel
+        this.props.connect.identifier = val;
         this.props.set('identifier', val);
       }
 
@@ -259,6 +263,7 @@
         if (!val) val = this.refs.direction.val();
         
         // set channel
+        this.props.connect.direction = val;
         this.props.set('direction', val);
       }
 
@@ -345,8 +350,9 @@
       async load() {
         // check loading
         if (this.loading) return;
-        if (this.spreadsheets) return;
         if (!this.props.connect.sheets) return;
+        if (this.props.connect.file && this.state.fields) return;
+        if (!this.props.connect.file && this.state.spreadsheets) return;
 
         // loading
         this.loading = true;
@@ -387,6 +393,9 @@
             }, 'fields', this.props.connect, {})),
           });
         }
+
+        // loading
+        this.loading = false;
       }
     }
   </script>
