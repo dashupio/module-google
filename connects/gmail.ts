@@ -116,7 +116,7 @@ export default class GmailConnect extends Struct {
     this.loading = true;
 
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // try/catch
     try {
@@ -288,7 +288,7 @@ export default class GmailConnect extends Struct {
     if (!dashup || !req || !req.query || !req.query.code) return { connect };
 
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(
@@ -344,7 +344,7 @@ export default class GmailConnect extends Struct {
    */
   async profileAction(opts, connect) {
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(
@@ -388,7 +388,7 @@ export default class GmailConnect extends Struct {
    */
   async sendAction(opts, connect, { to, item, user, subject, body }) {
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(

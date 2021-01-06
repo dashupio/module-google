@@ -1,5 +1,6 @@
 
 // import connect interface;
+import got from 'got';
 import fetch from 'node-fetch';
 import chunk from 'chunk';
 import * as csv from '@fast-csv/parse';
@@ -112,7 +113,7 @@ export default class SheetsConnect extends Struct {
     if (!dashup || !req || !req.query || !req.query.code) return { connect };
 
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
     
     // create client
     const client = new google.auth.OAuth2(
@@ -145,7 +146,7 @@ export default class SheetsConnect extends Struct {
    */
   async listAction(opts, connect) {
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(
@@ -163,18 +164,9 @@ export default class SheetsConnect extends Struct {
       version : 'v3',
     });
 
-    // mimes
-    const mimes = [
-      'text/csv',
-      'text/tsv',
-      'text/tab-separated-values',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ].map((m) => ` or mimeType='${m}'`).join(' ').trim();
-
     // List files
     const { data } = await drive.files.list({
-      q        : `(mimeType='application/vnd.google-apps.spreadsheet'${mimes}) and trashed=false`,
+      q        : `(mimeType='application/vnd.google-apps.spreadsheet') and trashed=false`,
       fields   : 'nextPageToken, files(id, name, mimeType, size, properties, version, mimeType, createdTime, modifiedTime, exportLinks, webContentLink)',
       spaces   : 'drive',
       pageSize : 1000
@@ -199,6 +191,7 @@ export default class SheetsConnect extends Struct {
         size       : file.size,
         name       : file.name,
         mime       : file.mimeType,
+        exports    : file.exportLinks,
         version    : file.version,
         created_at : file.createdTime,
         updated_at : file.modifiedTime,
@@ -214,7 +207,7 @@ export default class SheetsConnect extends Struct {
    */
   async fieldsAction(opts, connect) {
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(
@@ -237,7 +230,8 @@ export default class SheetsConnect extends Struct {
     
     // stream
     const stream = csv.parse({
-      headers : true
+      headers : true,
+      maxRows : 1,
     })
       .on('error', error => console.error(error))
       .on('data', (r) => data.push(r))
@@ -246,12 +240,19 @@ export default class SheetsConnect extends Struct {
     // await
     await new Promise(async (resolve, reject) => {
       // done
-      (await drive.files.export({
+      if (!(connect.file.exports || {})['text/csv']) return (await drive.files.export({
+        alt      : 'media',
         fileId   : connect.file.id,
         mimeType : 'text/csv'
       }, {
         responseType : 'stream'
       })).data
+        .on('end', resolve)
+        .on('error', reject)
+        .pipe(stream);
+
+      // get file
+      got.stream(connect.file.exports['text/csv'])
         .on('end', resolve)
         .on('error', reject)
         .pipe(stream);
@@ -275,7 +276,7 @@ export default class SheetsConnect extends Struct {
    */
   async syncAction(opts, connect, { page, model, form }) {
     // fix domain
-    const domain = this.dashup.config.url.includes('.io') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
     // create client
     const client = new google.auth.OAuth2(
@@ -307,12 +308,19 @@ export default class SheetsConnect extends Struct {
     // await
     await new Promise(async (resolve, reject) => {
       // done
-      (await drive.files.export({
+      if (!(connect.file.exports || {})['text/csv']) return (await drive.files.export({
+        alt      : 'media',
         fileId   : connect.file.id,
         mimeType : 'text/csv'
       }, {
         responseType : 'stream'
       })).data
+        .on('end', resolve)
+        .on('error', reject)
+        .pipe(stream);
+
+      // get file
+      got.stream(connect.file.exports['text/csv'])
         .on('end', resolve)
         .on('error', reject)
         .pipe(stream);
@@ -327,7 +335,7 @@ export default class SheetsConnect extends Struct {
     const identifierField = (formPage.get('data.fields') || []).find((c) => c.uuid === connect.identifier);
 
     // split into a few
-    const chunks = chunk(data, 100);
+    const chunks = chunk(data, 250);
 
     // log
     console.log(`syncing ${chunks.length} chunks`);

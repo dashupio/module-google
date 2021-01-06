@@ -106,7 +106,7 @@ export default class GoogleConnect extends Struct {
     if (!dashup) return;
 
     // check secret
-    if (connect.secret === 'SECRET') {
+    if (connect.secret === 'PROTECTED') {
       // secret
       connect.secret = oldConnect.secret;
     }
