@@ -1,6 +1,5 @@
 
 // import connect interface;
-import got from 'got';
 import fetch from 'node-fetch';
 import chunk from 'chunk';
 import * as csv from '@fast-csv/parse';
@@ -230,8 +229,10 @@ export default class SheetsConnect extends Struct {
     
     // stream
     const stream = csv.parse({
-      headers : true,
-      maxRows : 1,
+      headers                : true,
+      maxRows                : 1,
+      strictColumnHandling   : false,
+      discardUnmappedColumns : true,
     })
       .on('error', error => console.error(error))
       .on('data', (r) => data.push(r))
@@ -240,19 +241,13 @@ export default class SheetsConnect extends Struct {
     // await
     await new Promise(async (resolve, reject) => {
       // done
-      if (!(connect.file.exports || {})['text/csv']) return (await drive.files.export({
+      (await drive.files.export({
         alt      : 'media',
         fileId   : connect.file.id,
         mimeType : 'text/csv'
       }, {
         responseType : 'stream'
       })).data
-        .on('end', resolve)
-        .on('error', reject)
-        .pipe(stream);
-
-      // get file
-      got.stream(connect.file.exports['text/csv'])
         .on('end', resolve)
         .on('error', reject)
         .pipe(stream);
@@ -299,7 +294,9 @@ export default class SheetsConnect extends Struct {
     
     // stream
     const stream = csv.parse({
-      headers : true
+      headers                : true,
+      strictColumnHandling   : false,
+      discardUnmappedColumns : true,
     })
       .on('error', error => console.error(error))
       .on('data', (r) => data.push(r))
@@ -308,19 +305,13 @@ export default class SheetsConnect extends Struct {
     // await
     await new Promise(async (resolve, reject) => {
       // done
-      if (!(connect.file.exports || {})['text/csv']) return (await drive.files.export({
+      (await drive.files.export({
         alt      : 'media',
         fileId   : connect.file.id,
         mimeType : 'text/csv'
       }, {
         responseType : 'stream'
       })).data
-        .on('end', resolve)
-        .on('error', reject)
-        .pipe(stream);
-
-      // get file
-      got.stream(connect.file.exports['text/csv'])
         .on('end', resolve)
         .on('error', reject)
         .pipe(stream);
