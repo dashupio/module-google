@@ -152,7 +152,7 @@ export default class GmailConnect extends Struct {
               maxResults : 1,
             }, (err, res) => {
               // check err
-              if (err) return reject(err);
+              if (err) return resolve([]);
 
               // resolve
               resolve(res.data.messages);
