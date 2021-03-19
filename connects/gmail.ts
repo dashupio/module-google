@@ -251,7 +251,7 @@ export default class GmailConnect extends Struct {
               _meta : {
                 email : message.id,
               },
-            });
+            }, 'model');
 
             // fields
             if (fields.type) event.set(fields.type.name || fields.type.uuid, 'email:inbound');
@@ -464,7 +464,7 @@ export default class GmailConnect extends Struct {
         email  : done.id,
         thread : done.threadId,
       },
-    });
+    }, 'model');
 
     // fields
     if (fields.type) event.set(fields.type.name || fields.type.uuid, 'email:outbound');
@@ -476,11 +476,7 @@ export default class GmailConnect extends Struct {
 
     // save event
     await event.save({
-      user   : opts.user,
-      page   : opts.form,
-      form   : opts.form,
-      model  : opts.model,
-      dashup : opts.dashup,
+      ...opts,
     });
 
     // return true
