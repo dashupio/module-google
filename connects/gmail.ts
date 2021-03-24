@@ -89,7 +89,7 @@ export default class GmailConnect extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['phone'];
+    return ['phone', 'email', 'flow'];
   }
 
   /**
@@ -108,6 +108,7 @@ export default class GmailConnect extends Struct {
     const pages = await new Query({
       struct : 'gmail',
     }, 'page').where({
+      type            : 'phone',
       'connects.type' : 'gmail',
     }).find();
 
@@ -451,33 +452,39 @@ export default class GmailConnect extends Struct {
     // load form
     const [page, form] = await new Query(opts, 'page').findByIds([opts.page, opts.form]);
 
-    // get fields
-    const fields = {};
-    ['type', 'item', 'body', 'time', 'user', 'title'].forEach((field) => {
-      // set field
-      fields[field] = (form.get('data.fields') || []).find((f) => f.uuid === page.get(`data.event.${field}`));
-    });
+    // return
+    if (!page || !form) return true;
 
-    // create email event
-    const event = new Model({
-      _meta : {
-        email  : done.id,
-        thread : done.threadId,
-      },
-    }, 'model');
+    // check type
+    if (page.get('data.event')) {
+      // get fields
+      const fields = {};
+      ['type', 'item', 'body', 'time', 'user', 'title'].forEach((field) => {
+        // set field
+        fields[field] = (form.get('data.fields') || []).find((f) => f.uuid === page.get(`data.event.${field}`));
+      });
 
-    // fields
-    if (fields.type) event.set(fields.type.name || fields.type.uuid, 'email:outbound');
-    if (fields.item) event.set(fields.item.name || fields.item.uuid, item);
-    if (fields.body) event.set(fields.body.name || fields.body.uuid, `<b>Subject:</b> ${subject}<br />${body}`);
-    if (fields.time) event.set(fields.time.name || fields.time.uuid, new Date());
-    if (fields.user) event.set(fields.user.name || fields.user.uuid, user);
-    if (fields.title) event.set(fields.title.name || fields.title.uuid, `Sent email from ${connect.email} to ${to}`);
+      // create email event
+      const event = new Model({
+        _meta : {
+          email  : done.id,
+          thread : done.threadId,
+        },
+      }, 'model');
 
-    // save event
-    await event.save({
-      ...opts,
-    });
+      // fields
+      if (fields.type) event.set(fields.type.name || fields.type.uuid, 'email:outbound');
+      if (fields.item) event.set(fields.item.name || fields.item.uuid, item);
+      if (fields.body) event.set(fields.body.name || fields.body.uuid, `<b>Subject:</b> ${subject}<br />${body}`);
+      if (fields.time) event.set(fields.time.name || fields.time.uuid, new Date());
+      if (fields.user) event.set(fields.user.name || fields.user.uuid, user);
+      if (fields.title) event.set(fields.title.name || fields.title.uuid, `Sent email from ${connect.email} to ${to}`);
+
+      // save event
+      await event.save({
+        ...opts,
+      });
+    }
 
     // return true
     return true;
