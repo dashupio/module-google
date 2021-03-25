@@ -1,5 +1,6 @@
 
 // import connect interface;
+import Bottleneck from 'bottleneck';
 import MailComposer from 'nodemailer/lib/mail-composer';
 import { google } from 'googleapis';
 import { Struct, Query, Model } from '@dashup/module';
@@ -89,7 +90,7 @@ export default class GmailConnect extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['phone', 'email', 'flow'];
+    return ['phone', 'bulk', 'flow'];
   }
 
   /**
@@ -387,106 +388,74 @@ export default class GmailConnect extends Struct {
    * @param opts 
    * @param connect 
    */
-  async sendAction(opts, connect, { to, item, user, subject, body }) {
-    // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+  async sendAction(opts, connect, { to, subject, body }) {
+    // try/catch
+    try {
+      // fix domain
+      const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
 
-    // create client
-    const client = new google.auth.OAuth2(
-      this.dashup.config.client,
-      this.dashup.config.secret,
-      `${domain}/connect/gmail`,
-    );
+      // create client
+      const client = new google.auth.OAuth2(
+        this.dashup.config.client,
+        this.dashup.config.secret,
+        `${domain}/connect/gmail`,
+      );
 
-    // set credentials
-    client.setCredentials(connect.gmail.tokens);
+      // set credentials
+      client.setCredentials(connect.gmail.tokens);
 
-    // gmail
-    const gmail = google.gmail({
-      auth    : client,
-      version : 'v1',
-    });
-
-    // create body
-    const email = new MailComposer({
-      to,
-      subject,
-
-      from : connect.email,
-      html : body,
-      textEncoding : 'base64',
-    });
-    const encoded = await new Promise((resolve, reject) => {
-      // compile email
-      email.compile().build((err, data) => {
-        // err
-        if (err) return reject(err);
-
-        // resolve
-        return resolve(Buffer.from(data)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, ''));
-      });
-    });
-
-    // send email
-    const done = await new Promise((resolve, reject) => {
-      // create email
-      gmail.users.messages.send({
-        auth     : client,
-        userId   : 'me',
-        resource : {
-          raw : encoded,
-        },
-      }, (err, res) => {
-        // reject
-        if (err) return reject(err);
-  
-        // resolve
-        resolve(res.data);
-      });
-    });
-
-    // load form
-    const [page, form] = await new Query(opts, 'page').findByIds([opts.page, opts.form]);
-
-    // return
-    if (!page || !form) return true;
-
-    // check type
-    if (page.get('data.event')) {
-      // get fields
-      const fields = {};
-      ['type', 'item', 'body', 'time', 'user', 'title'].forEach((field) => {
-        // set field
-        fields[field] = (form.get('data.fields') || []).find((f) => f.uuid === page.get(`data.event.${field}`));
+      // gmail
+      const gmail = google.gmail({
+        auth    : client,
+        version : 'v1',
       });
 
-      // create email event
-      const event = new Model({
-        _meta : {
-          email  : done.id,
-          thread : done.threadId,
-        },
-      }, 'model');
+      // create body
+      const email = new MailComposer({
+        to,
+        subject,
 
-      // fields
-      if (fields.type) event.set(fields.type.name || fields.type.uuid, 'email:outbound');
-      if (fields.item) event.set(fields.item.name || fields.item.uuid, item);
-      if (fields.body) event.set(fields.body.name || fields.body.uuid, `<b>Subject:</b> ${subject}<br />${body}`);
-      if (fields.time) event.set(fields.time.name || fields.time.uuid, new Date());
-      if (fields.user) event.set(fields.user.name || fields.user.uuid, user);
-      if (fields.title) event.set(fields.title.name || fields.title.uuid, `Sent email from ${connect.email} to ${to}`);
-
-      // save event
-      await event.save({
-        ...opts,
+        from : connect.email,
+        html : body,
+        textEncoding : 'base64',
       });
+      const encoded = await new Promise((resolve, reject) => {
+        // compile email
+        email.compile().build((err, data) => {
+          // err
+          if (err) return reject(err);
+
+          // resolve
+          return resolve(Buffer.from(data)
+          .toString('base64')
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=+$/, ''));
+        });
+      });
+
+      // send email
+      await new Promise((resolve, reject) => {
+        // create email
+        gmail.users.messages.send({
+          auth     : client,
+          userId   : 'me',
+          resource : {
+            raw : encoded,
+          },
+        }, (err, res) => {
+          // reject
+          if (err) return reject(err);
+    
+          // resolve
+          resolve(res.data);
+        });
+      });
+
+      // return true
+      return true;
+    } catch (e) {
+      return false;
     }
-
-    // return true
-    return true;
   }
 }
