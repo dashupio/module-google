@@ -90,7 +90,7 @@ export default class GmailConnect extends Struct {
    */
   get categories() {
     // return array of categories
-    return ['phone', 'bulk', 'flow'];
+    return ['phone', 'bulk', 'flow', 'auth'];
   }
 
   /**
