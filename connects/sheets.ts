@@ -66,8 +66,7 @@ export default class SheetsConnect extends Struct {
   get views() {
     // return object of views
     return {
-      auth   : 'connect/sheets/auth',
-      config : 'connect/sheets/config',
+      config : 'connect/sheets',
     };
   }
 

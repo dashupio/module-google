@@ -62,8 +62,7 @@ export default class GoogleConnect extends Struct {
   get views() {
     // return object of views
     return {
-      auth   : 'connect/google/auth',
-      config : 'connect/google/config',
+      config : 'connect/google',
     };
   }
 

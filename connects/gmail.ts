@@ -68,8 +68,7 @@ export default class GmailConnect extends Struct {
   get views() {
     // return object of views
     return {
-      auth   : 'connect/gmail/auth',
-      config : 'connect/gmail/config',
+      config : 'connect/gmail',
     };
   }
 
