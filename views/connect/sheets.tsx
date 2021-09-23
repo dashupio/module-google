@@ -2,9 +2,8 @@
 // import react
 import bytes from 'bytes';
 import moment from 'moment';
-import { Select } from '@dashup/ui';
-import { Button } from 'react-bootstrap';
 import { windowPopup } from 'window-popup';
+import { Select, Button } from '@dashup/ui';
 import React, { useState, useEffect } from 'react';
 
 // connect sheets
@@ -54,9 +53,12 @@ const ConnectSheets = (props = {}) => {
       struct : 'sheets',
     }, 'sync', props.connect, {
       page  : props.page.get('_id'),
-      form  : props.page.get('data.forms.0'),
+      form  : props.getForms()[0] ? props.getForms()[0].get('_id') : null,
       model : props.page.get('data.model') || props.page.get('_id'),
     });
+
+    // reload
+    props.page.emit('reload');
 
     // set syncing
     setSyncing(false);
@@ -218,7 +220,7 @@ const ConnectSheets = (props = {}) => {
       ) : (
         <div className="card mb-3">
           <div className="card-body">
-            <button onClick={ (e) => onConnect(e) } className="btn btn-light bg-white">
+            <button onClick={ (e) => onConnect(e) } className="btn btn-light">
               <i className="fab fa-google me-2" />
               Connect with Sheets
             </button>

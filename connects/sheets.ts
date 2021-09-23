@@ -352,8 +352,14 @@ export default class SheetsConnect extends Struct {
 
         // set fields
         Object.keys(connect.fields).forEach((uuid) => {
+          // find field
+          const subField = (formPage.get('data.fields') || []).find((c) => c.uuid === uuid || c.name === uuid);
+
+          // check field
+          if (!subField) return;
+
           // set value
-          update[uuid] = item[connect.fields[uuid]];
+          update[subField.name || subField.uuid] = item[connect.fields[uuid]];
         });
 
         // return update

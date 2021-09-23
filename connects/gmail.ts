@@ -288,8 +288,10 @@ export default class GmailConnect extends Struct {
     // check dashup
     if (!dashup || !req || !req.query || !req.query.code) return { connect };
 
+    console.log('testing', connect, this.dashup.config.url.includes('_front'));
+
     // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? 'https://dashup.com' : 'https://dashup.dev';
 
     // create client
     const client = new google.auth.OAuth2(
