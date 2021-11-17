@@ -15,7 +15,7 @@
     "@babel/plugin-transform-typescript": "^7.11.0",
     "@babel/preset-env": "^7.11.5",
     "@dashup/eslint-config-dashup": "0.0.1",
-    "@dashup/module": "^2.0.9",
+    "@dashup/module": "^2.0.12",
     "@fast-csv/parse": "^4.3.6",
     "babel-plugin-add-module-exports": "^1.0.4",
     "bottleneck": "^2.19.5",

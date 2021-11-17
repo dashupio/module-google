@@ -3,8 +3,8 @@
 import bytes from 'bytes';
 import moment from 'moment';
 import { windowPopup } from 'window-popup';
-import { Select, Button } from '@dashup/ui';
 import React, { useState, useEffect } from 'react';
+import { Box, CircularProgress, Stack, Button, Icon, TextField, MenuItem, Card, CardContent, CardHeader, Typography, LoadingButton, CardActions } from '@dashup/ui';
 
 // connect sheets
 const ConnectSheets = (props = {}) => {
@@ -163,123 +163,189 @@ const ConnectSheets = (props = {}) => {
     };
   }, [props.connect?.file?.name]);
 
+  // connect with sheets
+  if (!props.connect.sheets) return (
+    <Box py={ 2 }>
+      <Button onClick={ (e) => onConnect(e) } variant="contained" startIcon={ (
+        <Icon type="fab" icon="google" />
+      ) }>
+        Connect with Sheets
+      </Button>
+    </Box>
+  );
+
+  // no file
+  if (!props.connect.file) return (
+    <Card variant="outlined" sx={ {
+      mt : 2,
+    } }>
+      <CardContent>
+        <TextField
+          value={ search }
+          label="Search"
+          onChange={ (e) => setSearch(e.target.value) }
+          fullWidth
+
+          sx={ {
+            mb : 2,
+          } }
+        />
+        { spreadsheets && spreadsheets.length ? (
+          <Stack spacing={ 2 }>
+            { (spreadsheets || []).map((sheet, i) => {
+              // check search
+              if (!`${sheet.name}`.includes(search)) return null;
+
+              // return jsx
+              return (
+                <Card key={ `sheet-${i}` } variant="outlined" onClick={ (e) => props.setConnect('file', sheet) } sx={ {
+                  cursor : 'pointer',
+                } }>
+                  <CardContent sx={ {
+                    display       : 'flex',
+                    alignItems    : 'center',
+                    flexDirection : 'row',
+                  } }>
+                    <Box>
+                      <Typography sx={ {
+                        fontWeight : 'bold',
+                      } }>
+                        { sheet.name }
+                      </Typography>
+                    </Box>
+                    <Box textAlign="right" ml="auto">
+                      <Typography sx={ {
+                        fontSize : 'small',
+                      } }>
+                        { `Created ${moment(sheet.created_at).fromNow()}` }
+                      </Typography>
+                      <Typography sx={ {
+                        fontSize : 'small',
+                      } }>
+                        { `Size ${bytes(sheet.size)}` }
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              );
+            }) }
+          </Stack>
+        ) : (
+          <Box py={ 2 } alignItems="center" justifyContent="center" display="flex">
+            <CircularProgress />
+          </Box>
+        ) }
+      </CardContent>
+    </Card>
+  );
+
   // return jsx
   return (
-    <>
-      { props.connect.sheets ? (
-        props.connect.file ? (
-          <div className="card mb-3">
-            <div className="card-body d-flex flex-row">
-              <div className="text-overflow">
-                <b>{ props.connect.file.name }</b>
-                <small className="d-block">
-                  Created { moment(props.connect.file.created_at).fromNow() },
-                  Size { bytes(props.connect.file.size) }
-                </small>
-              </div>
-            </div>
-          </div>
+    <Card variant="outlined" sx={ {
+      mt : 2,
+    } }>
+      <CardHeader
+        title={ props.connect.file?.name }
+        subtitle={ `Created ${moment(props.connect.file.created).fromNow()}` }
+      />
+      <CardContent>
+        <TextField
+          value={ props.connect.direction || '' }
+          label="Direction"
+          onChange={ (e) => props.setConnect('direction', e.target.value) }
+          select
+          fullWidth
+        >
+          { getDirection().map((option) => {
+            // return jsx
+            return (
+              <MenuItem key={ option.value } value={ option.value }>
+                { option.label }
+              </MenuItem>
+            )
+          }) }
+        </TextField>
+        <TextField
+          value={ props.connect.identifier || '' }
+          label="Identifier"
+          onChange={ (e) => props.setConnect('identifier', e.target.value) }
+          select
+          fullWidth
+        >
+          { getIdentifier(props.getFields()).map((option) => {
+            // return jsx
+            return (
+              <MenuItem key={ option.value } value={ option.value }>
+                { option.label }
+              </MenuItem>
+            )
+          }) }
+        </TextField>
+        
+        { (loading || !fields) ? (
+          <Box py={ 2 } alignItems="center" justifyContent="center" display="flex">
+            <CircularProgress />
+          </Box>
         ) : (
-          <div className="card mb-3">
-            <div className="card-body">
-              { !!loading || !spreadsheets ? (
-                <div className="text-center">
-                  <i className="h1 fa fa-spinner fa-spin my-5" />
-                </div>
-              ) : (
-                <>
-                  <div className="mb-3">
-                    <div className="input-group">
-                      <input className="form-control" onKeyUp={ (e) => setSearch(e.target.value) } placeholder="Search..." />
-                      <span className="input-group-text">
-                        <i className="fa fa-search" />
-                      </span>
-                    </div>
-                  </div>
-                  { spreadsheets.map((sheet, i) => {
-                    // return jsx
-                    return (
-                      <button key={ `sheet-${i}` } onClick={ (e) => props.setConnect('file', sheet) } className={ `card w-100 card-sm bg-white text-dark mb-2${`${sheet.name}`.includes(search) ? '' : ' d-none'}` }>
-                        <div className="card-body d-flex flex-row">
-                          <div className="text-overflow text-start">
-                            <b>{ sheet.name }</b>
-                            <small className="d-block">
-                              Created { moment(sheet.created_at).fromNow() },
-                              Size { bytes(sheet.size) }
-                            </small>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  }) }
-                </>
-              ) }
-            </div>
-          </div>
-        )
-      ) : (
-        <div className="card mb-3">
-          <div className="card-body">
-            <button onClick={ (e) => onConnect(e) } className="btn btn-light">
-              <i className="fab fa-google me-2" />
-              Connect with Sheets
-            </button>
-          </div>
-        </div>
-      ) }
-
-      { !!(props.connect.sheets && props.connect.file) && (
-        <div className="card mb-3">
-          <div className="card-body">
-            <div className="mb-3">
-              <label className="form-label">
-                Select Direction
-              </label>
-              <Select options={ getDirection() } value={ getDirection().filter((f) => f.selected) } onChange={ (val) => props.setConnect('direction', val?.value) } />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">
-                Select Identifier Field
-              </label>
-              <Select options={ getIdentifier(props.getFields()) } value={ getIdentifier(props.getFields()).filter((f) => f.selected) } onChange={ (val) => props.setConnect('identifier', val?.value) } />
-            </div>
-            
-            { !!loading || !fields ? (
-              <div className="text-center">
-                <i className="h1 fa fa-spinner fa-spin my-5" />
-              </div>
-            ) : (
-              fields.map((field, i) => {
-                // return jsx
-                return (
-                  <div key={ `field-${field.key}` } className="card bg-white text-dark mb-2">
-                    <div className="card-body">
-                      <div className="row">
-                        <div className="col-6 d-flex align-items-center">
-                          <div>
-                            <b>{ field.key }</b>
-                            <small className="d-block">{ field.value }</small>
-                          </div>
-                        </div>
-                        <div className="col-6">
-                          <Select options={ getField(field, props.getFields()) } value={ getField(field, props.getFields()).filter((f) => f.selected) } onChange={ (val) => onField(field, val?.value) } />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) }
-            <div className="text-end">
-              <Button variant="success" disabled={ syncing } onClick={ () => onSync() }>
-                { syncing ? (sync ? `Synced ${sync.done} of ${sync.total}` : 'Syncing Data...') : 'Sync Data' }
-              </Button>
-            </div>
-
-          </div>
-        </div>
-      ) }
-    </>
+          <Stack spacing={ 2 } sx={ {
+            mt : 2,
+          } }>
+            { fields.map((field, i) => {
+              // return jsx
+              return (
+                <Card variant="outlined" key={ field.key }>
+                  <CardContent sx={ {
+                    display       : 'flex',
+                    alignItems    : 'center',
+                    flexDirection : 'row',
+                  } }>
+                    <Box>
+                      <Typography sx={ {
+                        fontWeight : 'bold',
+                      } }>
+                        { field.key }
+                      </Typography>
+                      <Typography sx={ {
+                        fontSize : 'small',
+                      } }>
+                        { field.value }
+                      </Typography>
+                    </Box>
+                    
+                    <TextField
+                      value={ getField(field, props.getFields()).find((f) => f.selected)?.value || '' }
+                      label={ field.key }
+                      onChange={ (e) => onField(field, e.target.value) }
+                      select
+                      sx={ {
+                        ml       : 'auto',
+                        minWidth : '50%',
+                      } }
+                    >
+                      { getField(field, props.getFields()).map((option) => {
+                        // return jsx
+                        return (
+                          <MenuItem key={ option.value } value={ option.value }>
+                            { option.label }
+                          </MenuItem>
+                        )
+                      }) }
+                    </TextField>
+                  </CardContent>
+                </Card>
+              );
+            }) }
+          </Stack>
+        ) }
+      </CardContent>
+      <CardActions sx={ {
+        justifyContent : 'end',
+      } }>
+        <LoadingButton color="success" variant="contained" disabled={ !!syncing } loading={ !!syncing } onClick={ () => onSync() }>
+          { syncing ? (sync ? `Synced ${sync.done} of ${sync.total}` : 'Syncing Data...') : 'Sync Data' }
+        </LoadingButton>
+      </CardActions>
+    </Card>
   );
 };
 

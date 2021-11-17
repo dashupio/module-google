@@ -111,7 +111,7 @@ export default class SheetsConnect extends Struct {
     if (!dashup || !req || !req.query || !req.query.code) return { connect };
 
     // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? 'https://dashup.com' : 'https://dashup.dev';
     
     // create client
     const client = new google.auth.OAuth2(
@@ -144,7 +144,7 @@ export default class SheetsConnect extends Struct {
    */
   async listAction(opts, connect) {
     // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? 'https://dashup.com' : 'https://dashup.dev';
 
     // create client
     const client = new google.auth.OAuth2(
@@ -205,7 +205,7 @@ export default class SheetsConnect extends Struct {
    */
   async fieldsAction(opts, connect) {
     // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? 'https://dashup.com' : 'https://dashup.dev';
 
     // create client
     const client = new google.auth.OAuth2(
@@ -270,7 +270,7 @@ export default class SheetsConnect extends Struct {
    */
   async syncAction(opts, connect, { page, model, form }) {
     // fix domain
-    const domain = this.dashup.config.url.includes('_front') ? `https://dashup.io` : this.dashup.config.url;
+    const domain = this.dashup.config.url.includes('_front') ? 'https://dashup.com' : 'https://dashup.dev';
 
     // create client
     const client = new google.auth.OAuth2(

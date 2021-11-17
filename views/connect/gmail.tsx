@@ -2,6 +2,7 @@
 // import react
 import { windowPopup } from 'window-popup';
 import React, { useState, useEffect } from 'react';
+import { Box, Button, Icon, Typography } from '@dashup/ui';
 
 // connect sheets
 const ConnectGmail = (props = {}) => {
@@ -48,30 +49,18 @@ const ConnectGmail = (props = {}) => {
   }, [props.connect.gmail]);
 
   // return jsx
-  return (
-    <div className="card mb-3">
-      <div className="card-header">
-        <b>Gmail Connector</b>
-      </div>
-      { props.connect.gmail ? (
-        !loading && !!profile ? (
-          <div className="card-body">
-            Syncing with <b>{ profile.emailAddress }</b>
-          </div>
-        ) : (
-          <div className="card-body text-center">
-            <i className="mx-auto fa fa-spinner fa-spin my-5" />
-          </div>
-        )
-      ) : (
-        <div className="card-body">
-          <button onClick={ (e) => onConnect(e) } className="btn btn-google">
-            <i className="fab fa-google me-2" />
-            Connect with Gmail
-          </button>
-        </div>
-      ) }
-    </div>
+  return props.connect.gmail ? (
+    <Typography variant="h5">
+      { `Syncing with ${profile?.emailAddress || 'Loading...'}` }
+    </Typography>
+  ) : (
+    <Box py={ 2 }>
+      <Button onClick={ (e) => onConnect(e) } variant="contained" startIcon={ (
+        <Icon type="fab" icon="google" />
+      ) }>
+        Connect with Gmail
+      </Button>
+    </Box>
   );
 };
 
